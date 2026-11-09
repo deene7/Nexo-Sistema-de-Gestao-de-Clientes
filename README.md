@@ -1,4 +1,4 @@
-# WA · Gestão de Clientes
+Gestão de Clientes
 
 Sistema local para organizar, consultar e atualizar uma base de clientes, com cadastro único por CPF, múltiplos contatos e importação de planilhas.
 
