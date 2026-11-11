@@ -21,7 +21,7 @@ function harness() {
   function flush() {while(microtasks.length) microtasks.shift()(); while(timers.length) timers.shift()();}
   function form(action, method='post') {
     const classes = new Set();
-    const button = {tagName:'BUTTON',textContent:'Confirmar',disabled:false,dataset:{},classList:{add:x=>classes.add(x),remove:x=>classes.delete(x)}};
+    const button = {tagName:'BUTTON',childNodes:[{textContent:'Confirmar'}],replaceChildren(...nodes){this.childNodes=nodes;this.textContent=nodes.map(node=>node.textContent).join('');},textContent:'Confirmar',disabled:false,dataset:{},classList:{add:x=>classes.add(x),remove:x=>classes.delete(x)}};
     const result = {action,method,dataset:{},hasAttribute:()=>false,setAttribute(){},removeAttribute(){},
       querySelector:()=>button,querySelectorAll:()=>classes.has('is-processing')?[button]:[]};
     forms.push(result);return {result,button};

@@ -94,3 +94,12 @@ body.modern-ui{background:#f0f0f0;color:#2c2c2c}
 .modern-ui .metric-loading-dot{animation:wa-metric-dots 1.2s ease-in-out infinite!important}.modern-ui .metric-loading-dot:nth-child(2){animation-delay:.16s!important}.modern-ui .metric-loading-dot:nth-child(3){animation-delay:.32s!important}
 @keyframes wa-metric-dots{0%,65%,100%{opacity:.25;transform:translateY(0)}30%{opacity:1;transform:translateY(-.12em)}}
 @media(prefers-reduced-motion:reduce){.modern-ui .metric-loading-dot{animation-name:wa-metric-fade!important;animation-duration:2s!important}@keyframes wa-metric-fade{0%,65%,100%{opacity:.3}30%{opacity:1}}}
+.export-columns{display:flex;flex-wrap:wrap;gap:8px}.export-columns .tag{padding:7px 11px}
+
+.modern-ui .button-with-icon{display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.modern-ui .button-icon{display:inline-flex;align-items:center;justify-content:center;flex:0 0 16px;width:16px;height:16px}
+.modern-ui .button-icon svg{display:block;width:16px;height:16px;stroke-width:2;flex-shrink:0}
+
+.action-icon{display:inline-flex;width:16px;height:16px;vertical-align:-3px;flex-shrink:0;align-items:center;justify-content:center}.action-icon svg{display:block;width:16px;height:16px}.modern-ui :is(button,a.button):has(.action-icon){display:inline-flex;align-items:center;justify-content:center;gap:8px}.modern-ui .chip-remove:has(.action-icon){padding:0}
+.modern-ui [data-export-summary] .results-title{flex-wrap:wrap;gap:14px}
+.modern-ui [data-export-summary] .count{font-size:26px;font-weight:700;line-height:1.2;padding:8px 16px;border-radius:10px;color:#292929;font-variant-numeric:tabular-nums}

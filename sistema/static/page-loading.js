@@ -1,6 +1,7 @@
 (function () {
   'use strict';
   let busy = false;
+  const originalButtonContent = new WeakMap();
   const overlay = document.getElementById('page-processing');
   function show(title) {
     if (!overlay) return;
@@ -38,6 +39,7 @@
       show(title);
       const button = event.submitter || form.querySelector('button[type="submit"],button:not([type])');
       if (button && button.tagName === 'BUTTON') {
+        originalButtonContent.set(button, Array.from(button.childNodes));
         button.dataset.processingLabel = button.textContent;
         button.textContent = title;
         button.classList.add('is-processing');
@@ -64,7 +66,9 @@
       delete form.dataset.processing; form.removeAttribute('aria-busy');
       form.querySelectorAll('button.is-processing').forEach(function (button) {
         button.disabled = false; button.classList.remove('is-processing');
-        button.textContent = button.dataset.processingLabel || 'Continuar';
+        const content = originalButtonContent.get(button);
+        if (content) { button.replaceChildren(...content); originalButtonContent.delete(button); }
+        else button.textContent = button.dataset.processingLabel || 'Continuar';
         delete button.dataset.processingLabel;
       });
     });

@@ -1,5 +1,6 @@
+{% from 'icons.html' import action_icon %}
 {% extends 'base.html' %}{% block content %}
-<a class="back" href="{{ url_for('detail', client_id=client.id) if client else url_for('index') }}">← Voltar</a>
+<a class="back" href="{{ url_for('detail', client_id=client.id) if client else url_for('index') }}">{{ action_icon('left') }} Voltar</a>
 <header class="page-heading"><div><div class="eyebrow">CADASTRO</div><h1>{{ 'Novo cliente' if creating else 'Editar cliente' }}</h1><p>{{ 'Confira o CPF para evitar um cadastro duplicado.' if creating else 'As alterações ficam registradas no histórico.' }}</p></div></header>
 <form method="post" class="panel form-panel"><input type="hidden" name="csrf" value="{{ csrf }}">{% if not creating %}<input type="hidden" name="versao" value="{{ client.app_versao }}">{% endif %}
 <div class="form-grid">

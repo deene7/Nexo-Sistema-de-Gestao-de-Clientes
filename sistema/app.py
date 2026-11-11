@@ -8,12 +8,13 @@ from pathlib import Path
 import hashlib
 
 import pymysql
-from flask import Flask, Response, abort, flash, g, jsonify, redirect, render_template, request, session, url_for
+from flask import Flask, Response, abort, flash, g, jsonify, redirect, render_template, request, session, url_for, send_file
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from database import Database
 from pagination import page_numbers
 from export_csv import stream_clients
+from export_xlsx import build_clients_workbook, HEADERS
 from home_summary import HomeSummary
 from read_cache import ReadCache
 from client_origins import load_origins
@@ -388,6 +389,86 @@ def create_app(config):
                                uf=uf, order=order, paging=paging, active_filters=active_filters,category=category,
                                page_size=page_size,page_numbers=page_numbers(page,pages),pagination_endpoint='index',
                                result_start=(page-1)*page_size+1 if total else 0,result_end=min(page*page_size,total))
+
+    @app.get('/exportacoes')
+    @required(edit=True)
+    def exports():
+        from lookup_routes import STATES
+        return render_template('exports.html', export_headers=HEADERS, states=STATES)
+
+    def export_filters():
+        from lookup_routes import STATES
+        # Mantém os links antigos de categoria única funcionando.
+        categories = list(dict.fromkeys(request.args.getlist('categoria_id')))
+        legacy = request.args.get('categoria', 'todos')
+        if not categories and legacy != 'todos':
+            categories = [legacy]
+        uf = request.args.get('uf', '').strip().upper()
+        verification = request.args.get('verificacao', 'todos')
+        if uf and uf not in STATES:
+            abort(400, description='Estado inválido.')
+        if verification not in ('todos', 'com', 'sem'):
+            abort(400, description='Verificação inválida.')
+        where, params = 'c.excluido_em IS NULL', []
+        if categories:
+            if not app.config['FEATURES_V2']:
+                abort(400, description='Filtro de categoria indisponível.')
+            membership = ('SELECT 1 FROM app_cliente_categorias l JOIN app_categorias cat '
+                          'ON cat.id=l.categoria_id WHERE l.cliente_id=c.id AND cat.ativo=1')
+            conditions = []
+            ids = []
+            for category in categories:
+                if category == 'sem':
+                    conditions.append(f'NOT EXISTS ({membership})')
+                    continue
+                if not category.isascii() or not category.isdigit() or len(category) > 18:
+                    abort(400, description='Categoria inválida.')
+                ids.append(int(category))
+            ids = sorted(set(ids))
+            if ids:
+                marks = ','.join(['%s'] * len(ids))
+                active = db().all(f'SELECT id FROM app_categorias WHERE id IN ({marks}) AND ativo=1', ids)
+                if len(active) != len(ids):
+                    abort(400, description='Categoria indisponível.')
+                conditions.append(f'EXISTS ({membership} AND cat.id IN ({marks}))')
+                params.extend(ids)
+            where += ' AND (' + ' OR '.join(conditions) + ')'
+        if uf:
+            where += ' AND EXISTS (SELECT 1 FROM enderecos e WHERE e.cliente_id=c.id AND e.excluido_em IS NULL AND e.uf=%s)'
+            params.append(uf)
+        if verification != 'todos':
+            where += (' AND ' + ('NOT ' if verification == 'sem' else '') +
+                      "EXISTS (SELECT 1 FROM telefones t WHERE t.cliente_id=c.id AND t.excluido_em IS NULL AND t.situacao='confirmado')")
+        return where, params, {'categorias':categories, 'uf':uf, 'verificacao':verification}
+
+    @app.get('/exportacoes/contagem')
+    @required(edit=True)
+    def export_count():
+        where, params, filters = export_filters()
+        total = cached_read(('client_count', (where, tuple(params))),
+                            lambda: db().one(f'SELECT COUNT(*) AS n FROM clientes c WHERE {where}', params)['n'])
+        response = jsonify(total=total, filtrado=bool(filters['categorias'] or filters['uf'] or filters['verificacao'] != 'todos'))
+        response.headers['Cache-Control'] = 'no-store'
+        return response
+
+    @app.get('/exportacoes/clientes.xlsx')
+    @required(edit=True)
+    def export_clients_xlsx():
+        where, params, filters = export_filters()
+        output, count = build_clients_workbook(config, where, params)
+        try:
+            audit('exportar_xlsx', 'clientes', 0, after={**filters, 'quantidade':count, 'campos':HEADERS})
+            db().commit()
+            response = send_file(output, as_attachment=True,
+                                 download_name='clientes_' + datetime.now(timezone(timedelta(hours=-3))).strftime('%Y%m%d_%H%M%S') + '.xlsx',
+                                 mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response.headers['Cache-Control'] = 'no-store'
+            response.headers['X-Content-Type-Options'] = 'nosniff'
+            response.call_on_close(output.close)
+            return response
+        except Exception:
+            output.close()
+            raise
 
     @app.get('/clientes/exportar.csv')
     @required(edit=True)

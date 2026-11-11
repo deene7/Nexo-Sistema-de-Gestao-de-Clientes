@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% from 'icons.html' import nav_icon %}
+{% block title %}Exportações{% endblock %}
+{% block head %}<script defer src="{{ url_for('static',filename='export-filters.js') }}"></script>{% endblock %}
+{% block content %}
+<header class="page-heading"><div><div class="eyebrow">DADOS DOS CLIENTES</div><h1>Exportações</h1><p>Selecione o público e baixe uma planilha com os dados dos clientes.</p></div><span class="tag">Excel · .xlsx</span></header>
+<form class="panel form-panel" method="get" action="{{ url_for('export_clients_xlsx') }}" data-no-loading data-export-filters data-count-url="{{ url_for('export_count') }}">
+  <h2>Filtros da exportação</h2>
+  {% if features_v2 %}
+  <fieldset class="import-category-picker">
+    <legend>Categorias no banco (opcional)</legend>
+    <p>Escolha uma ou mais. O cliente pode pertencer a qualquer uma das opções marcadas.</p>
+    <div class="import-category-options">
+      {% for cat in available_categories %}<label><input type="checkbox" name="categoria_id" value="{{ cat.id }}"><span>{{ cat.nome }}</span></label>{% endfor %}
+      <label><input type="checkbox" name="categoria_id" value="sem"><span>Sem categoria</span></label>
+    </div>
+    <small>Sem marcação: exportar todos os clientes, com ou sem categoria.</small>
+  </fieldset>
+  {% endif %}
+  <div class="form-grid">
+    <label>Estado (UF)<select name="uf"><option value="">Todos os estados</option>{% for uf in states %}<option value="{{ uf }}">{{ uf }}</option>{% endfor %}</select><small>Considera qualquer endereço ativo do cadastro.</small></label>
+    <label>Verificação de telefone<select name="verificacao"><option value="todos">Todos os clientes</option><option value="com">Somente com telefone verificado</option><option value="sem">Somente sem nenhum telefone verificado</option></select><small>Sem verificação inclui clientes que não têm telefone.</small></label>
+  </div>
+  <div class="filter-actions"><p>Uma linha por cliente. Somente cadastros e contatos ativos.</p><div><button type="reset" class="button">Limpar filtros</button><button type="submit" class="primary button-with-icon"><span>Baixar planilha Excel</span><span class="button-icon" aria-hidden="true">{{ nav_icon('download') }}</span></button></div></div>
+</form>
+<section class="panel results" aria-label="Quantidade de clientes">
+  <div class="panel-heading" aria-live="polite" aria-atomic="true" data-export-summary>
+    <div class="results-title"><h2>Resultado da consulta</h2><span class="count" data-export-count>…</span></div>
+    <span class="muted" data-export-status>Contando clientes…</span>
+  </div>
+  <noscript><p class="lookup-list-note">Ative o JavaScript para atualizar a quantidade de clientes automaticamente.</p></noscript>
+</section>
+<section class="panel">
+  <div class="panel-heading"><h2>O que vem na planilha</h2><span class="muted">{{ export_headers|length }} colunas</span></div>
+  <div class="lookup-result-guide">
+    <div class="export-columns" aria-label="Colunas exportadas">{% for field in export_headers %}<span class="tag">{{ field }}</span>{% endfor %}</div>
+    <p><strong>Dados preservados:</strong> CPF, telefone e CEP mantêm os zeros iniciais. A idade é calculada na data da exportação.</p>
+    <p><strong>Contatos e endereço:</strong> até quatro telefones ativos por pessoa, nas colunas telefone_1 a telefone_4, pela ordem de cadastro. E-mails permanecem na mesma célula, separados por “ | ”. CEP, cidade e estado usam o primeiro endereço ativo cadastrado, mesmo quando outro endereço corresponde ao filtro de UF.</p>
+    <details><summary>Mais informações sobre o arquivo</summary><p>Campos não cadastrados ficam em branco. O gênero mantém o código do cadastro (M, F ou I). A verificação filtra os clientes; são incluídos até quatro dos seus telefones ativos. Em bases grandes, o download começa assim que o arquivo estiver pronto.</p></details>
+  </div>
+</section>
+{% endblock %}
