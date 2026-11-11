@@ -1,4 +1,4 @@
-Gestão de Clientes
+# Nexo — Sistema de Gestão de Clientes
 
 Sistema local para organizar, consultar e atualizar uma base de clientes, com cadastro único por CPF, múltiplos contatos e importação de planilhas.
 
@@ -13,7 +13,7 @@ Desenvolvido em **Python, Flask e MySQL**, com interface em português e acesso 
 - **Importação CSV e XLSX:** mapeamento de colunas, revisão de pendências, consolidação por CPF e acompanhamento do processamento.
 - **Complementação de cadastros:** importações podem preencher campos vazios e acrescentar contatos, preservando informações já preenchidas. Divergências de nome são separadas para revisão.
 - **Origem dos telefones:** lotes associados às categorias Discadora ou Argus podem marcar os telefones válidos importados como verificados, inclusive os já existentes para o mesmo CPF. O status representa a confiança na origem informada.
-- **Exportação CSV:** exporta os clientes conforme os filtros aplicados.
+- **Exportação CSV e XLSX:** exporta os clientes conforme os filtros aplicados.
 - **Lixeira:** exclusão recuperável de clientes e lotes, com exclusão permanente restrita ao administrador.
 - **Histórico:** registro de alterações e consulta de logs conforme as permissões.
 - **Página inicial:** resumo da base, boas-vindas e atalhos para as principais ações.
@@ -205,3 +205,5 @@ As senhas dos usuários são armazenadas como hash. A configuração de conexão
 
 O `.gitignore` exclui configurações locais, planilhas, bancos, backups, logs e dependências. Revise os arquivos selecionados antes de cada publicação: o `.gitignore` não remove arquivos que já tenham sido versionados.
 
+
+Cópia do código atual preparada em 11/11/2026, sem dados de produção. A demonstração e os testes geram apenas registros fictícios. A identidade visual original da aplicação foi preservada.
